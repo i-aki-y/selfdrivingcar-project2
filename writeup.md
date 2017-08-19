@@ -14,10 +14,10 @@ The goals / steps of this project are the following:
 * Analyze the softmax probabilities of the new images
 * Summarize the results with a written report
 
-###Data Set Summary & Exploration
+### Data Set Summary & Exploration
 
 
-####1. Basic summary
+#### 1. Basic summary
 
 I used the pandas library to calculate summary statistics of the traffic signs data set.
 The results are shown here.
@@ -33,7 +33,7 @@ Ratio of validation examples by training examples = 0.13
 Ratio of test examples by training examples = 0.36
 ```
 
-####2. Simple EDA
+#### 2. Simple EDA
 
 ##### Frequency of sign example
 Here is an exploratory visualization of the data set. It is a bar chart showing how many examples in each class for each different dataset. Examples of classes are not uniform but the distribution of training, validation and test dataset are approximately same.
@@ -93,7 +93,9 @@ In the given dataset, the position of signs are centered and the sizes are almos
 ![Low contrast image](output/very_dark_sample.png)
 Figure 3: Very low contrast image. It seems difficult to identify its class.
 
-###Design and Test a Model Architecture
+### Design and Test a Model Architecture
+
+#### 1. preprocessing
 
 I applied the following preprocessing
 
@@ -102,7 +104,7 @@ I applied the following preprocessing
 3. Histogram Equalization
 4. Data augmentation
 
-####1. Normalization
+##### 1. Normalization
 
 The training, validation and test data are normalized by the following method
 
@@ -112,11 +114,11 @@ $$
 
 where $X_{max}$ and $X_{min}$ are maximum and minimum values of given image data $X$.
 
-####3. Grayscale convert
+##### 2. Grayscale convert
 
 While RGB image colors may be an important feature to identify their classes, many color variation may disturb the model training because of overfitting to the specific color image. Observing some examples of given images, I think that each sign can be identified in a grayscale image. I compared performance between grayscale and RGB colored models, but there is no noticeable improvement. However, it is considered that the grayscale convert may give the more robust model. So I decided to left the grayscale convert in the final model.
 
-####4. Histogram equalization
+##### 3. Histogram equalization
 
 As shown in Figure 3, there some images whose brightness are too low. Identification of such images should be difficult. To improve the contrast I applied equalization technique[^1]. Since the standard histogram equalization does not work when there exists bright spot in the background region, Contrast Limited Adaptive Histogram Equalization (CLAHE)[^2] is employed. Adaptive histogram equalization (AHE) takes into account the spatial non-uniformity of given image. In AHE,  given image is divided into some sub regions and the usual histogram equalization is applied to these subregions. CLAHE is a variation of AHE. CLAHE introduces a limitation of histogram frequency which improves the signal noise ratio of background (unimportant) region, where larger limitation value gives stronger contrast.
 
@@ -126,7 +128,8 @@ Figure 4: Comparison before and after preprocessed images.
 
 [^1]:https://www.wikiwand.com/en/Histogram_equalization
 [^2]:https://en.wikipedia.org/w/index.php?title=Adaptive_histogram_equalization)
-####4. Data augmentation
+
+##### 4. Data augmentation
 
 In some trials and errors, I observed that my model tend to overfit the training data. In general, overfitting is suppressed when the number of data increases[^3]. Therefore, in order to improve my model performance, I introduce image data augmentation technique. Data augmentation make fake training data from original training data.
 
@@ -158,7 +161,7 @@ I apply this augmentation technique to the training data belonging to the classe
 
 I did not many trial and error for augmentation size so that it is not clear what size of augmentation is optimal.
 
-####2. Model architecture
+#### 2. Model architecture
 
 My model architecture is shown by the following diagram.
 
@@ -169,7 +172,7 @@ The architecture is basically same as LeNet[^5]. I inserted dropout layers into 
 
 [^5]:http://yann.lecun.com/exdb/publis/pdf/lecun-01a.pdf
 
-####3. Model training and hyper parameters
+#### 3. Model training and hyper parameters
 
 To train the model, I used an `AdamOptimizer` a TensorFlow's built-in optimizer. Model parameters are updated for each mini batch. In each dropout layer, I used same dropout probability. In batch normalization layers, the update of batch normalization parameters is enabled only during training time. Finally, I used the following hyper parameters:
 
@@ -181,7 +184,7 @@ enable_bach_norm = True
 keep_probability = 0.7  # 1.0 - dropout probability
 ```
 
-####4. Description of approach
+#### 4. Description of approach
 
 My final model results were:
 * training set accuracy of `0.972`
@@ -218,9 +221,9 @@ Now the accuracy of test data is over `0.93`. but there is overfitting behavior 
 ##### model 7
 As discussed preprocessing section, I added grayscale convert to the model. This makes no significant improvement. But I decide to include the grayscale convert, since I considered that the grayscale convert may give the more robust model.
 
-###Test a Model on New Images
+### Test a Model on New Images
 
-####1. Test with collected German traffic signs
+#### 1. Test with collected German traffic signs
 
 Here are five German traffic signs that I found on the web:
 
@@ -229,7 +232,7 @@ Figure 8: Newly collected images.
 
 The first image (33:turn_right_ahead) might be typical, and it should be identified easily. The second image (8:speed_limit_120) is not typical, since the background color of number is a reddish color, while typical color is white. The third example (23:slippery_road) is unclear. This is difficult to identify the inner graphics for me. The fourth example (13:yield) is a clear sign, but it has an irrelevant number under the sign which may mislead the model. The last image is not clear but typical.
 
-####2. About prediction results for new traffic signs.
+#### 2. About prediction results for new traffic signs.
 
 Here are the results of the prediction:
 
@@ -244,7 +247,7 @@ Table 2: Prediction and ground true comparison.
 
 The accuracy of this prediction is 80 % (4/5). Comparing to the accuracy of the test set (>93%), the result is reasonable.
 
-####3. Discussion of the prediction result of new images
+#### 3. Discussion of the prediction result of new images
 
 The prediction probabilities for new images are shown in figure 9. The probabilities giving right predictions make clear single peaks, while the prediction of `8:speed_limit_120` image gives a completely wrong answer. In the misidentified case, the right answer (8:speed limit (120km/h)) is included top 5 and found at the fourth position, but it is a very low probability. In the failure case, the prediction (`40:roundabout mandatory`) has a same circular shape as a right sign, but its color and inner graphics are different. The character depicted in the input image seems to be sufficiently clear, so the reason of misidentification is not ambiguity. One possibility is that the background color of the character part is different from usual white. This modified the contrast between character and background region and disturb model prediction.
 
